@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using MediaTekDocuments.model;
 using MediaTekDocuments.dal;
+using System;
 
 namespace MediaTekDocuments.controller
 {
@@ -26,7 +27,7 @@ namespace MediaTekDocuments.controller
         /// getter sur la liste des genres
         /// </summary>
         /// <returns>Liste d'objets Genre</returns>
-        public List<Categorie> GetAllGenres()
+        public List<Categorie> GetAllGenres() 
         {
             return access.GetAllGenres();
         }
@@ -39,6 +40,7 @@ namespace MediaTekDocuments.controller
         {
             return access.GetAllLivres();
         }
+
 
         /// <summary>
         /// getter sur la liste des Dvd
@@ -96,5 +98,49 @@ namespace MediaTekDocuments.controller
         {
             return access.CreerExemplaire(exemplaire);
         }
+
+       
+
+
+        public bool AddcommandeLivre(Commande cmd)
+        {
+
+            Console.Write(cmd);
+            return access.addcommandeLivre(cmd);
+        }
+
+        public bool AddCommandelivretable(CommandeDoc cmd)
+        {
+
+            return access.addcommandeLivretable(cmd);
+        }
+
+        
+
+        public void Deletecommandedocument(string id)
+        {
+            access.deletecommandedocument(id);
+        }
+
+        public bool Deletecommande(Commande cmd)
+        {
+            return access.deletecommande(cmd);
+        }
+
+        public List<CmdLivreDvd> GetAllcommandeLivre()
+        {
+            return access.GetAllcommandeLivre();
+        }
+
+        public List<CmdLivreDvd> modifcmd(string id, Etape etape)
+        {
+            return access.modifcmd(id, etape);
+        }
+
+        public List<CmdLivreDvd> Getalldvdcmd()
+        {
+            return access.Getalldvdcmd();
+        }
+
     }
 }

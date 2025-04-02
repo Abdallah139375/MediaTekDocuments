@@ -1239,5 +1239,347 @@ namespace MediaTekDocuments.view
             }
         }
         #endregion
+
+        #region  commandes Livre
+
+        private readonly BindingSource bdg = new BindingSource();
+        private List<CmdLivreDvd> commandeLivre = new List<CmdLivreDvd>();
+
+        private void tabPage1_Enter(object sender, EventArgs e)
+        {
+            commandeLivre = controller.GetAllcommandeLivre();
+            RemplircommandeLivrecompletement();
+
+        }
+        private void RemplircommandeListe(List<CmdLivreDvd> commandelivre)
+        {
+
+            bdg.DataSource = commandelivre;
+            dgvcommandeLivre.DataSource = bdg;
+            dgvcommandeLivre.Columns["idArticle"].DisplayIndex = 0;
+            //dgvcommandeLivre.Columns["date"].DisplayIndex = 1;
+            // dgvcommandeLivre.Columns["id"].Visible = false; 
+
+            dgvcommandeLivre.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+
+
+        }
+        private void RemplircommandeLivrecompletement()
+        {
+            RemplircommandeListe(commandeLivre);
+
+        }
+
+        //Click sur le Bouton rechercher
+
+
+
+        private void FrmMediatek_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void tabPage1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnrechlivre_Click(object sender, EventArgs e)
+        {
+            string idrecherche = txtnumlivre.Text;
+
+            if (idrecherche != "")
+            {
+                CmdLivreDvd cmdlivre = commandeLivre.Find(x => x.idArticle == idrecherche);
+
+                if (cmdlivre != null)
+                {
+                    RemplircommandeListe(new List<CmdLivreDvd> { cmdlivre });
+                }
+                else
+                {
+                    MessageBox.Show("Article introuvable");
+                }
+            }
+        }
+
+
+
+        private void btnajoutcmdL_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Récupération des données depuis les champs
+                string id = txtidcmdL.Text.Trim();
+                string montant = txtmontantcmdL.Text.Trim();
+                string idlivre = txtidlivre.Text.Trim();
+                if (!int.TryParse(txtnbcmdL.Text, out int nbexemplaire))
+                {
+                    MessageBox.Show("Veuillez entrer un nombre valide pour le nombre d'exemplaires.", "Erreur de saisie");
+                    return;
+                }
+
+                DateTime date = dtpcmdL.Value;
+
+                // Création des objets Commande et CommandeDoc
+                Commande macommande = new Commande(id, date, montant);
+                CommandeDoc cmdlivre = new CommandeDoc(id, nbexemplaire, idlivre, "1"); // Étape "en cours"
+
+                // Ajout en base de données
+                bool ajoutCommande = controller.AddcommandeLivre(macommande);
+                bool ajoutCommandeDoc = controller.AddCommandelivretable(cmdlivre);
+
+                if (ajoutCommande && ajoutCommandeDoc)
+                {
+                    // Mise à jour de l'affichage en ajoutant directement l'objet
+                    CmdLivreDvd nouvelleCommande = new CmdLivreDvd("en cours", nbexemplaire, idlivre, id, date, montant);
+                    commandeLivre.Add(nouvelleCommande);
+                    RemplircommandeListe(commandeLivre);
+                    dgvcommandeLivre.Refresh();
+
+                    // Vider les champs seulement si l'ajout a réussi
+                    txtidcmdL.Clear();
+                    txtmontantcmdL.Clear();
+                    txtidlivre.Clear();
+                    txtnbcmdL.Clear();
+
+                    MessageBox.Show("Commande ajoutée avec succès !");
+                }
+                else
+                {
+                    MessageBox.Show("Erreur lors de l'ajout de la commande en base de données.", "Erreur !");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Une erreur est survenue : " + ex.Message, "Erreur");
+            }
+        }
+
+
+        private void grbnewetape_Enter(object sender, EventArgs e)
+        {
+            grbnewetape.Visible = true;
+            if (dgvcommandeLivre.SelectedRows.Count > 0)
+            {
+                grbnewetape.Visible = true;
+            }
+        }
+
+        private void btnoketape_Click(object sender, EventArgs e)
+        {
+            try
+            {
+
+
+                grbnewetape.Visible = true;
+                DataGridViewRow row = dgvcommandeLivre.SelectedRows[0];
+
+                string newetape = returnnum(txtnewetape.Text);
+                //row.Cells["Etape"].Value = newetape;
+                string id = Convert.ToString(row.Cells["id"].Value);
+                //int nb = Convert.ToInt32(row.Cells["nbExemplaire "]);
+                string idArticle = Convert.ToString(row.Cells["idArticle"]);
+                string etape = newetape;
+                Etape etp = new Etape(newetape);
+
+                controller.modifcmd(id, etp);
+                commandeLivre = controller.GetAllcommandeLivre();
+                RemplircommandeListe(commandeLivre);
+                // RemplircommandeLivrecompletement();
+            }
+            catch
+            {
+                MessageBox.Show("Erreur ");
+            }
+        }
+
+        //methode qui renvoi le num  de l'etape 
+        private string returnnum(string etape)
+        {
+            string num = "0";
+
+            if (etape == "livrée")
+            {
+                num = "2";
+            }
+            else
+            {
+                if (etape == "relancée")
+                {
+                    num = "3";
+                }
+                else
+                {
+                    if (etape == "réglée")
+                    {
+                        num = "4";
+                    }
+
+                }
+            }
+            return num;
+        }
+
+        private void btnsuppr_Click(object sender, EventArgs e)
+        {
+            // Vérifier si une ligne est sélectionnée
+            if (dgvcommandeLivre.SelectedRows.Count > 0)
+            {
+                // Demander une confirmation avant de supprimer la ligne sélectionnée
+                DialogResult result = MessageBox.Show(
+                    "Voulez-vous vraiment supprimer la ligne sélectionnée ?",
+                    "Confirmation de suppression",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question
+                );
+
+                // Si l'utilisateur confirme la suppression
+                if (result == DialogResult.Yes)
+                {
+                    // Récupérer la ligne sélectionnée
+                    DataGridViewRow row = dgvcommandeLivre.SelectedRows[0];
+
+                    // Récupérer les valeurs des cellules pour la suppression en base de données
+                    string id = Convert.ToString(row.Cells["Id"].Value);
+                    string montant = Convert.ToString(row.Cells["montant"].Value);
+                    DateTime date = Convert.ToDateTime(row.Cells["dateCommande"].Value);
+                    string idlivre = Convert.ToString(row.Cells["idArticle"].Value);
+                    int nbexemplaire = Convert.ToInt32(row.Cells["Quantité"].Value);
+
+                    // Créer l'objet Commande à supprimer
+                    Commande deletecmd = new Commande(id, date, montant);
+
+                    // Appeler le contrôleur pour supprimer la commande de la base de données
+                    controller.Deletecommande(deletecmd);
+
+                    // Rafraîchir l'affichage pour s'assurer que la liste est à jour
+                    RemplircommandeLivrecompletement();
+
+                    // Supprimer la ligne du DataGridView
+                    dgvcommandeLivre.Rows.Remove(row);
+                }
+            }
+            else
+            {
+                // Afficher un message si aucune ligne n'est sélectionnée
+                MessageBox.Show("Veuillez sélectionner une ligne à supprimer.", "Aucune ligne sélectionnée", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+        #endregion
+
+        private void dgvcommandeLivre_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+
+        #region commande DVD
+        private readonly BindingSource bdgDvdListecmd = new BindingSource();
+        private List<CmdLivreDvd> dvdcmd = new List<CmdLivreDvd>();
+
+        /// <summary>
+        /// Ouverture de l'onglet Commande DVD
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void tabPage2_Click(object sender, EventArgs e)
+        {
+            dvdcmd = controller.Getalldvdcmd();
+            Rempliredvdcommandeliste();
+        }
+
+        /// <summary>
+        ///  Affichage de la liste complète des livres
+        /// </summary>
+        public void Rempliredvdcommandeliste()
+        {
+            Remplirlistedvd(dvdcmd);
+
+
+        }
+
+        /// <summary>
+        /// Remplir le datagridview avec liste recue en paramètre 
+        /// </summary>
+        /// <param name="revues"></param>
+        public void Remplirlistedvd(List<CmdLivreDvd> revues)
+        {
+            bdgDvdListecmd.DataSource = revues;
+            dgvdvdcmd.DataSource = bdgDvdListecmd;
+            dgvdvdcmd.Columns["Id"].DisplayIndex = 0;
+            //dgvdvdcmd.Columns["Date"].DisplayIndex = 1;
+
+            dgvdvdcmd.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+        }
+
+ 
+        /// <summary>
+        /// Btn recherche commande DVD 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnrecherdvd_Click_1(object sender, EventArgs e)
+        {
+            if (txtiddvd.Text != "")
+            {
+                CmdLivreDvd cmddvd = dvdcmd.Find(x => x.idArticle.Equals(txtiddvd.Text));
+                if (cmddvd != null)
+                {
+                    List<CmdLivreDvd> commande = new List<CmdLivreDvd>() { cmddvd };
+                    Remplirlistedvd(commande);
+                }
+                else
+                {
+                    MessageBox.Show("Article introuvable ");
+                    Rempliredvdcommandeliste();
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Btn supprimer 
+        /// Supprimr une commande de DVD
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param
+        private void btnsupprdvd_Click(object sender, EventArgs e)
+        {
+            DataGridViewRow row = dgvdvdcmd.SelectedRows[0];
+            dgvdvdcmd.Rows.Remove(row);
+        }
+
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+
+            //recup info --------------------------------
+            string id = txtiddvdcmd.Text;
+            string montant = txtcmddvdmontant.Text;
+            string iddvd = txtdvdidcmd.Text;
+            // Vérification et conversion du nombre d'exemplaires
+            int nbexemplaire;
+            if (!int.TryParse(txtcmddvdnb.Text, out nbexemplaire))
+            {
+                MessageBox.Show("Veuillez entrer un nombre valide pour le nombre d'exemplaires.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            txtiddvdcmd.Clear();
+            txtcmddvdmontant.Clear();
+            txtdvdidcmd.Clear();
+            txtcmddvdnb.Clear();
+
+            //date 
+            DateTime date = dtpcmddvd.Value;
+
+            Commande commandedvd = new Commande(id, date, montant);
+            controller.AddcommandeLivre(commandedvd);
+            CommandeDoc cmddvd = new CommandeDoc(id, nbexemplaire, iddvd, "1");
+            controller.AddCommandelivretable(cmddvd);
+        }
+
+        #endregion commande DVD 
     }
+
 }

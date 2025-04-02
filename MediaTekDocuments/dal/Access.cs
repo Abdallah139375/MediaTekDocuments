@@ -37,6 +37,12 @@ namespace MediaTekDocuments.dal
         private const string POST = "POST";
         /// <summary>
         /// méthode HTTP pour update
+        /// 
+
+        private const string PUT = "PUT";
+        /// <summary>
+        /// méthode HTTP pour delete
+        private const string DELETE = "DELETE";
 
         /// <summary>
         /// Méthode privée pour créer un singleton
@@ -243,6 +249,77 @@ namespace MediaTekDocuments.dal
                 serializer.Serialize(writer, value);
             }
         }
+        /// <summary>
+        /// Récupérer la liste de commande de livres 
+        /// </summary>
+        /// <returns></returns>
+       
+        /// <summary>
+        /// Ajouter une commande 
+        /// </summary>
+        /// <param name="commande"></param>
+        public bool addcommandeLivre(Commande commande)
+        {
+            // var jsonData = Newtonsoft.Json.JsonConvert.SerializeObject(commande , new CustomDateTimeConverter());
+            // var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
+            Console.Write(commande);
+            String jsonCommande = JsonConvert.SerializeObject(commande, new CustomDateTimeConverter());
+            List<Commande> liste = TraitementRecup<Commande>(POST, "commande", jsonCommande);
+
+            return (liste != null);
+        }
+
+
+        public bool addcommandeLivretable(CommandeDoc commandeL)
+        {
+            //Console.Write(commande);
+            String jsonCommandelivre = JsonConvert.SerializeObject(commandeL, new CustomDateTimeConverter());
+            List<CommandeDoc> listeL = TraitementRecup<CommandeDoc>(POST, "commandedocument", jsonCommandelivre);
+
+            return (listeL != null);
+        }
+
+        public List<CmdLivreDvd> GetAllcommandeLivre()
+        {
+            List<CmdLivreDvd> Laliste = TraitementRecup<CmdLivreDvd>(GET, "commandeLivre", "");
+            return Laliste;
+        }
+
+        
+
+        /// <summary>
+        /// Récupérer la liste de commande de DVD
+        /// </summary>
+        /// <returns></returns>
+        public List<CmdLivreDvd> Getalldvdcmd()
+        {
+            List<CmdLivreDvd> lesdates = TraitementRecup<CmdLivreDvd>(GET, "commandedvd", "");
+            return lesdates;
+        }
+
+        /// <summary>
+        /// Supprimer une commande
+        /// </summary>
+        /// <param name="id"></param>
+        public bool deletecommande(Commande c)
+        {
+            String jsondeletecmd = JsonConvert.SerializeObject(c, new CustomDateTimeConverter());
+            List<Commande> unecommande = TraitementRecup<Commande>(DELETE, "commande", jsondeletecmd); 
+            return (unecommande != null);
+        }
+
+        public List<CmdLivreDvd> modifcmd(string id, Etape etape)
+        {
+            String jsonmodif = JsonConvert.SerializeObject(etape);
+            List<CmdLivreDvd> listeapresmodif = TraitementRecup<CmdLivreDvd>(PUT, "commandedocument/" + id, jsonmodif);  
+            return listeapresmodif;
+        }
+
+        public void deletecommandedocument(string id)
+        {
+            TraitementRecup<CmdLivreDvd>(DELETE, "commande/" + id, null); 
+        }
+
 
     }
 }
