@@ -2,6 +2,7 @@
 using MediaTekDocuments.model;
 using MediaTekDocuments.dal;
 using System;
+using Newtonsoft.Json;
 
 namespace MediaTekDocuments.controller
 {
@@ -10,6 +11,8 @@ namespace MediaTekDocuments.controller
     /// </summary>
     class FrmMediatekController
     {
+
+        private const string POST = "POST";
         /// <summary>
         /// Objet d'accès aux données
         /// </summary>
@@ -141,6 +144,26 @@ namespace MediaTekDocuments.controller
         {
             return access.Getalldvdcmd();
         }
+
+        public bool Addabonnement(Abonnement abn)
+        {
+
+            Console.Write(abn);
+            return access.Addabonnement(abn);
+        }
+
+        
+        public List<Cmdrevue> Getallrevuecmd()
+        {
+            return access.Getallrevuecmd();
+        }
+        public List<DateTime> Getdateachat(int num)
+        {
+            return access.Getdateachat(num);
+        }
+
+        
+
 
     }
 }

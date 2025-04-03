@@ -1580,6 +1580,198 @@ namespace MediaTekDocuments.view
         }
 
         #endregion commande DVD 
+
+        private void label73_Click(object sender, EventArgs e)
+        {
+
+        }
+        #region Commande revue
+    
+        private readonly BindingSource bdgrevues = new BindingSource();
+        private List<Cmdrevue> commanderevues = new List<Cmdrevue>();
+        private void btnajoutcmdrevue_Click(object sender, EventArgs e)
+        {
+            // Récupérer les informations du formulaire
+            string id = txtidcmdr.Text; // ID de la commande
+            string montant = txtmontantr.Text; // Montant de la commande
+            string idrevue = txtidr.Text; // ID de la revue
+            DateTime datecmd = dtpcommandere.Value; // Date de la commande
+            DateTime datefinabonnement = dtpfinabonnement.Value; // Date de fin de l'abonnement
+
+            // Vider les champs après récupération
+            txtidcmdr.Clear();
+            txtmontantr.Clear();
+            txtidr.Clear();
+
+            // Créer un objet Commande avec les informations récupérées
+            Commande lacommande = new Commande(id, datecmd, montant);
+
+            // Créer un objet Abonnement avec les informations récupérées
+            Abonnement abonnement = new Abonnement(id, datefinabonnement, idrevue);
+
+            // Ajouter la commande et l'abonnement via le contrôleur
+            bool commandeAjoutee = controller.AddcommandeLivre(lacommande);
+            bool abonnementAjoute = controller.Addabonnement(abonnement);
+
+            if (commandeAjoutee && abonnementAjoute)
+            {
+                // Récupérer toutes les commandes et abonnements
+                List<Cmdrevue> commanderevues = controller.Getallrevuecmd();
+
+                // Remplir le DataGridView avec les données
+                Remplirlisterevue(commanderevues);
+            }
+            else
+            {
+                // Afficher un message d'erreur si l'ajout a échoué
+                MessageBox.Show("Erreur lors de l'ajout de la commande", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+
+        /// <summary>
+        /// Suppression d'une commande de revues
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnsupprcmdrevue_Click(object sender, EventArgs e)
+        {
+            DataGridViewRow row = dgvcmdRevue.SelectedRows[0];
+            dgvcmdRevue.Rows.Remove(row);
+        }
+
+        /// <summary>
+        /// Suppression d'une commande de revues
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button3_Click(object sender, EventArgs e)
+        {
+            if (dgvcmdRevue.SelectedRows.Count > 0)
+            {
+                DataGridViewRow row = dgvcmdRevue.SelectedRows[0];
+                int num = Convert.ToInt32(row.Cells["Num"].Value);
+                DateTime datefin = Convert.ToDateTime(row.Cells["Fin_abonnement"].Value);
+                DateTime datecommande = Convert.ToDateTime(row.Cells["Date"].Value);
+                List<DateTime> dateAchatexemplaire = controller.Getdateachat(num);
+                string idcommande = Convert.ToString(row.Cells["Id"].Value);
+
+                if (MessageBox.Show("Voulez-vous vraiment supprimer cet élément ?", "Confirmation de suppression", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    //controller.Deletecommande();
+                    RemplircommandeLivrecompletement();
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Methode de vérifiction date  avant suppression  
+        /// </summary>
+        /// <param name="datecommande"></param>
+        /// <param name="datefinabonnemnt"></param>
+        /// <param name="dateparution"></param>
+        /// <returns></returns>
+        public bool ParutionDansAbonnement(DateTime datecommande, DateTime datefinabonnemnt, DateTime dateparution)
+        {
+            bool rep = false;
+            // dateparution= controller.getdateparution()
+            if (dateparution >= datecommande && dateparution <= datefinabonnemnt)
+            {
+                rep = true;
+            }
+            return rep;
+        }
+
+
+        /// <summary>
+        /// Btn recherche revue 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnrecherrevue_Click(object sender, EventArgs e)
+        {
+            if (txtidrevue.Text != "")
+            {
+                Cmdrevue cmdrevue = commanderevues.Find(x => x.Revue.Equals(txtidrevue.Text));
+                if (cmdrevue != null)
+                {
+                    List<Cmdrevue> commande = new List<Cmdrevue>() { cmdrevue };
+                    Remplirlisterevue(commande);
+                }
+                else
+                {
+                    MessageBox.Show("Article introuvable ");
+                    RemplircommandeLivrecompletement();
+                }
+            }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+
+            //recup info --------------------------------
+            string id = txtiddvdcmd.Text;
+            string montant = txtcmddvdmontant.Text;
+            string iddvd = txtdvdidcmd.Text;
+            int nbexemplaire = int.Parse(txtcmddvdnb.Text);
+
+            txtiddvdcmd.Clear();
+            txtcmddvdmontant.Clear();
+            txtdvdidcmd.Clear();
+            txtcmddvdnb.Clear();
+
+            //date 
+            DateTime date = dtpcmddvd.Value;
+
+            Commande commandedvd = new Commande(id, date, montant);
+            controller.AddcommandeLivre(commandedvd);
+            CommandeDoc cmddvd = new CommandeDoc(id, nbexemplaire, iddvd, "1");
+            controller.AddCommandelivretable(cmddvd);
+        }
+
+        private void tabPage3_Click(object sender, EventArgs e)
+        {
+            commanderevues = controller.Getallrevuecmd();
+            Remplirrevuecommandeliste();
+        }
+
+        /// <summary>
+        /// Methode pour remplir le datagridview des commandes revues 
+        /// </summary>
+        public void Remplirrevuecommandeliste()
+        {
+            Remplirlisterevue(commanderevues);
+            dgvcmdRevue.Refresh();
+
+        }
+
+        //  Remplir la liste de commande (abonnement) revue 
+        public void Remplirlisterevue(List<Cmdrevue> revues)
+        {
+
+            bdgrevues.DataSource = revues; // Lier les données au BindingSource
+            dgvcmdRevue.DataSource = bdgrevues; // Lier le BindingSource au DataGridView
+
+            // Configurer l'affichage des colonnes
+            dgvcmdRevue.Columns["Id"].DisplayIndex = 0;
+            dgvcmdRevue.Columns["Montant"].DisplayIndex = 1;
+            dgvcmdRevue.Columns["Revue"].DisplayIndex = 2;
+            dgvcmdRevue.Columns["dateCommande"].DisplayIndex = 3;
+            dgvcmdRevue.Columns["Numero"].Visible = false;
+            dgvcmdRevue.Columns["Fin_abonnement"].DisplayIndex = 4;
+
+            // Ajuster la taille des colonnes automatiquement
+            dgvcmdRevue.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+
+
+        }
+
+        private void dgvcmdRevue_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
     }
+    #endregion
 
 }

@@ -34,7 +34,7 @@ namespace MediaTekDocuments.dal
         /// <summary>
         /// méthode HTTP pour insert
         /// </summary>
-        private const string POST = "POST";
+        public const string POST = "POST";
         /// <summary>
         /// méthode HTTP pour update
         /// 
@@ -177,7 +177,7 @@ namespace MediaTekDocuments.dal
         /// <param name="message">information envoyée dans l'url</param>
         /// <param name="parametres">paramètres à envoyer dans le body, au format "chp1=val1&chp2=val2&..."</param>
         /// <returns>liste d'objets récupérés (ou liste vide)</returns>
-        private List<T> TraitementRecup<T> (String methode, String message, String parametres)
+        public List<T> TraitementRecup<T> (String methode, String message, String parametres)
         {
             // trans
             List<T> liste = new List<T>();
@@ -320,6 +320,50 @@ namespace MediaTekDocuments.dal
             TraitementRecup<CmdLivreDvd>(DELETE, "commande/" + id, null); 
         }
 
+        /// <summary>
+        /// Ajouter un abonnement revue 
+        /// </summary>
+        /// <param name="abn"></param>
+        /// <returns></returns>
+        public bool Addabonnement(Abonnement abn)
+        {
+            String jsonabonnement = JsonConvert.SerializeObject(abn, new CustomDateTimeConverter());
+            List<Abonnement> listeL = TraitementRecup<Abonnement>(POST, "abonnement", jsonabonnement);
+            return (listeL != null);
+        }
 
+        /// <summary>
+        /// Récupérer la liste de commande de revues
+        /// </summary>
+        /// <returns></returns>
+        public List<Cmdrevue> Getallrevuecmd()
+        {
+            try
+            {
+                // Appel à TraitementRecup pour récupérer les commandes de revues
+                List<Cmdrevue> liste = TraitementRecup<Cmdrevue>(GET, "commanderevue", "");
+
+                if (liste == null || liste.Count == 0)
+                {
+                    // Si aucune commande n'est retournée, vous pouvez afficher un message ou prendre une autre action
+                    Console.WriteLine("Aucune commande de revue trouvée.");
+                }
+
+                return liste;
+            }
+            catch (Exception ex)
+            {
+                // Gestion des erreurs
+                Console.WriteLine("Erreur lors de la récupération des commandes de revues : " + ex.Message);
+                return new List<Cmdrevue>(); // Retourner une liste vide en cas d'erreur
+            }
+        }
+
+
+        public List<DateTime> Getdateachat(int num)
+        {
+            List<DateTime> lesdates = TraitementRecup<DateTime>(GET, "exemplairedate/" + num,"");
+            return lesdates;
+        }
     }
 }

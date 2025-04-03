@@ -111,10 +111,18 @@
     <Compile Include="manager\ApiRest.cs" />
     <Compile Include="controller\FrmMediatekController.cs" />
     <Compile Include="dal\Access.cs" />
+    <Compile Include="model\Abonnement.cs" />
     <Compile Include="model\CmdLivreDvd.cs" />
+    <Compile Include="model\Cmdrevue.cs" />
     <Compile Include="model\commande.cs" />
     <Compile Include="model\CommandeDoc.cs" />
     <Compile Include="model\etape.cs" />
+    <Compile Include="view\Authentification.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="view\Authentification.Designer.cs">
+      <DependentUpon>Authentification.cs</DependentUpon>
+    </Compile>
     <Compile Include="view\FrmMediatek.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -143,6 +151,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="view\Authentification.resx">
+      <DependentUpon>Authentification.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="view\FrmMediatek.resx">
       <DependentUpon>FrmMediatek.cs</DependentUpon>
     </EmbeddedResource>
