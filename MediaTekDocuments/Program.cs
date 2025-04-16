@@ -12,9 +12,16 @@ namespace MediaTekDocuments
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Authentification());
+            try
+            {
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new Authentification());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erreur au démarrage : " + ex.ToString(), "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }

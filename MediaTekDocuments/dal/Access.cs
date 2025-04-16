@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows.Forms;
 using System.Collections.Generic;
 using MediaTekDocuments.model;
 using MediaTekDocuments.manager;
@@ -19,6 +20,7 @@ namespace MediaTekDocuments.dal
         /// adresse de l'API
         /// </summary>
         private static readonly string uriApi = "http://localhost/rest_mediatekdocuments/";
+        //private static readonly string uriApi = "https://restmediatekdocu.atwebpages.com/rest_mediatekdocuments/";
         /// <summary>
         /// instance unique de la classe
         /// </summary>
@@ -37,13 +39,12 @@ namespace MediaTekDocuments.dal
         public const string POST = "POST";
         /// <summary>
         /// méthode HTTP pour update
-        /// 
-
+        /// </summary>
         private const string PUT = "PUT";
         /// <summary>
         /// méthode HTTP pour delete
+        /// </summary>
         private const string DELETE = "DELETE";
-
         /// <summary>
         /// Méthode privée pour créer un singleton
         /// initialise l'accès à l'API
@@ -53,7 +54,7 @@ namespace MediaTekDocuments.dal
             String authenticationString;
             try
             {
-                authenticationString = "admin:adminpwd";
+                authenticationString = "Abdallah:Abda2006";
                 api = ApiRest.GetInstance(uriApi, authenticationString);
             }
             catch (Exception e)
@@ -175,7 +176,7 @@ namespace MediaTekDocuments.dal
         /// <typeparam name="T"></typeparam>
         /// <param name="methode">verbe HTTP (GET, POST, PUT, DELETE)</param>
         /// <param name="message">information envoyée dans l'url</param>
-        /// <param name="parametres">paramètres à envoyer dans le body, au format "chp1=val1&chp2=val2&..."</param>
+        /// <param name="parametres">paramètres à envoyer dans le body, au format"</param>
         /// <returns>liste d'objets récupérés (ou liste vide)</returns>
         public List<T> TraitementRecup<T> (String methode, String message, String parametres)
         {
@@ -200,11 +201,13 @@ namespace MediaTekDocuments.dal
                 {
                     Console.WriteLine("code erreur = " + code + " message = " + (String)retour["message"]);
                 }
-            }catch(Exception e)
-            {
-                Console.WriteLine("Erreur lors de l'accès à l'API : "+e.Message);
-                Environment.Exit(0);
             }
+            catch (Exception e)
+            {
+                MessageBox.Show("Erreur lors de l'accès à l'API : " + e.Message, "Erreur API", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
+            }
+
             return liste;
         }
 
@@ -260,8 +263,7 @@ namespace MediaTekDocuments.dal
         /// <param name="commande"></param>
         public bool addcommandeLivre(Commande commande)
         {
-            // var jsonData = Newtonsoft.Json.JsonConvert.SerializeObject(commande , new CustomDateTimeConverter());
-            // var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
+            
             Console.Write(commande);
             String jsonCommande = JsonConvert.SerializeObject(commande, new CustomDateTimeConverter());
             List<Commande> liste = TraitementRecup<Commande>(POST, "commande", jsonCommande);
@@ -270,15 +272,27 @@ namespace MediaTekDocuments.dal
         }
 
 
+
+        ///<summary>
+        /// Ajoute une commande de livre dans la table en la sérialisant au format JSON et en l'envoyant via une requête HTTP.
+        /// </summary>
+        /// <param name="commandeL">Commande de type <see cref="CommandeDoc"/> à ajouter.</param>
+        /// <returns>True si la commande a été ajoutée avec succès, False sinon.</returns>
         public bool addcommandeLivretable(CommandeDoc commandeL)
         {
-            //Console.Write(commande);
+            
             String jsonCommandelivre = JsonConvert.SerializeObject(commandeL, new CustomDateTimeConverter());
             List<CommandeDoc> listeL = TraitementRecup<CommandeDoc>(POST, "commandedocument", jsonCommandelivre);
 
             return (listeL != null);
         }
 
+
+
+        /// <summary>
+        /// Récupère la liste de toutes les commandes de livres et DVD depuis un service externe via une requête HTTP.
+        /// </summary>
+        /// <returns>Liste des commandes de type <see cref="CmdLivreDvd"/>.</returns>
         public List<CmdLivreDvd> GetAllcommandeLivre()
         {
             List<CmdLivreDvd> Laliste = TraitementRecup<CmdLivreDvd>(GET, "commandeLivre", "");
@@ -308,6 +322,16 @@ namespace MediaTekDocuments.dal
             return (unecommande != null);
         }
 
+
+
+
+        /// <summary>
+        /// Modifie une commande de livre ou DVD en fonction de l'ID de la commande et de la nouvelle étape.
+        /// La commande modifiée est envoyée via une requête HTTP PUT, et la liste mise à jour des commandes est retournée.
+        /// </summary>
+        /// <param name="id">Identifiant de la commande à modifier.</param>
+        /// <param name="etape">Nouvelle étape à appliquer à la commande.</param>
+        /// <returns>Liste mise à jour des commandes de type <see cref="CmdLivreDvd"/> après modification.</returns>
         public List<CmdLivreDvd> modifcmd(string id, Etape etape)
         {
             String jsonmodif = JsonConvert.SerializeObject(etape);
@@ -340,26 +364,41 @@ namespace MediaTekDocuments.dal
         {
             try
             {
-                // Appel à TraitementRecup pour récupérer les commandes de revues
                 List<Cmdrevue> liste = TraitementRecup<Cmdrevue>(GET, "commanderevue", "");
 
                 if (liste == null || liste.Count == 0)
                 {
-                    // Si aucune commande n'est retournée, vous pouvez afficher un message ou prendre une autre action
                     Console.WriteLine("Aucune commande de revue trouvée.");
+                    return new List<Cmdrevue>();
+                }
+
+                // Enrichir les objets avec les titres de revue
+                List<Revue> revues = GetAllRevues();
+                foreach (var cmd in liste)
+                {
+                    var revue = revues.FirstOrDefault(r => r.Id == cmd.Revue);
+                    if (revue != null)
+                    {
+                        cmd.Revue = revue.Titre; // on remplace l'ID par le Titre ici
+                    }
                 }
 
                 return liste;
             }
             catch (Exception ex)
             {
-                // Gestion des erreurs
                 Console.WriteLine("Erreur lors de la récupération des commandes de revues : " + ex.Message);
-                return new List<Cmdrevue>(); // Retourner une liste vide en cas d'erreur
+                return new List<Cmdrevue>();
             }
         }
 
 
+
+        /// <summary>
+        /// Récupère la liste des dates d'achat pour un numéro donné via une requête HTTP GET.
+        /// </summary>
+        /// <param name="num">Numéro pour lequel récupérer les dates d'achat.</param>
+        /// <returns>Liste des dates d'achat sous forme de <see cref="DateTime"/>.</returns>
         public List<DateTime> Getdateachat(int num)
         {
             List<DateTime> lesdates = TraitementRecup<DateTime>(GET, "exemplairedate/" + num,"");
